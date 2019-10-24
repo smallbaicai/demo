@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>广告轮播图</title>
+    <link rel="stylesheet" href="css/shufflingFigure.css">
+</head>
+<body>
+<div class="scroll" id="scroll">
+    <div class="box" id="box">
+        <ul id="ul">
+            <li><img src="img/1.jpg" height="300" width="593"/></li>
+            <li><img src="img/2.jpg" height="300" width="533"/></li>
+            <li><img src="img/3.jpg" height="313" width="500"/></li>
+            <li><img src="img/4.jpg" height="343" width="480"/></li>
+            <li><img src="img/5.jpg" height="300" width="533"/></li>
+        </ul>
+<!--        <ol>-->
+<!--            <li class="current">1</li>-->
+<!--            <li>2</li>-->
+<!--            <li>3</li>-->
+<!--            <li>4</li>-->
+<!--            <li>5</li>-->
+<!--        </ol>-->
+    </div>
+</div>
+<script>
+    var scroll = document.getElementById("scroll"); // 获得大盒子
+    var Obox = document.getElementById("box");
+    var Oul = document.getElementById("ul"); // 获得ul
+    // children元素只返回元素节点
+    // childNodes 返回所有的节点（包括文节点 注释节点）属性返回包含被选节点的子节点的 NodeList。
+    var ulLi = Oul.children; // 获得ul的子节点
+    // ffsetWidth 水平方向 width + 左右padding + 左右border-width
+    var liWidth = Oul.children[0].offsetWidth; // 获得li的宽度
+    // 生成小圆点
+    // 1.克隆元素 实现无缝滚动，克隆第一张图片放到最后面
+    Oul.appendChild(Oul.children[0].cloneNode(true));
+    // 2.创建ol和li
+    // (1)创建ol元素
+    var Ool = document.createElement("ol");
+    Ool.className = "ol";
+    // (2) 将ol放到box盒子
+    Obox.appendChild(Ool);
+    for(var i = 0;i<ulLi.length-1;i++){
+        // (3) 创建li元素
+        var Oli = document.createElement("li");
+        // (4) 给li里面添加文字 1 2 3 4 5
+        Oli.innerHTML = i + 1;
+        // 添加id 用于添加事件
+        Oli.id = i + 1;
+        // (5) 将li元素添加到ol里
+        Ool.appendChild(Oli);
+    }
+    var olLi = Ool.children; // 获得ol的子节点
+    // 将ol中的第一个li背景颜色设置为紫色
+    Ool.children[0].className = "current";
+    // 匀速动画
+    // 1. 鼠标经过第几个小圆点，就要展示第几张图片，并且小圆点的颜色也发生变化
+    // 2. 图片自动轮播，（这需要一个定时器）
+    // 3. 鼠标经过图片，图片停止自动播放（这需要清除定时器）
+    // 4. 鼠标离开图片，图片继续自动轮播 （重新开始定时器）
+    // 动画函数 第一个参数，代表谁动 第二个参数 动多少
+    // 让图片做匀速运动，匀速动画的原理是 当前的位置 + 速度 即 offsetLeft + speed
+    function animate(obj,target) {
+        // (1) 清除定时器
+        clearInterval(obj.timer);
+        // （2）判断是+还是- 即向左运动还是向右运动
+        var speed = obj.offsetLeft < target ? 15 : -15;
+        obj.timer = setInterval(function () {
+            var result = target - obj.offsetLeft; // 他们的差值不会超过speed
+             obj.style.left = obj.offsetLeft + speed  + "px";
+             if(Math.abs(result) <= Math.abs(speed)){
+                 clearInterval(obj.timer);
+                 obj.style.left = target + "px";
+                 flag = true;  //将flag置为true，使点击事件能再次触发
+             }
+        },10);
+    }
+   // 定时器函数
+    var timer = null; // 轮播图的定时器
+    var key = 0; // 控制播放的张数
+    var circle = 0; // 控制小圆点
+    timer = setInterval(autoplay,1000); // 自动轮播
+    var flag = true;  //用于判断上一个事件是否执行完毕，如果没有执行完毕禁止再次触发事件
+    // 轮播函数
+    function autoplay() {
+        /*自动轮播时,要对播放的张数key进行一个判断,
+        如果播放的张数超过ulLis.length-1,就要重头开始播放.
+        因为我们克隆了第一张并将其放在最后面,所以我们要从第二张图片开始播放*/
+        key ++;
+        if (key > ulLi.length - 1){
+            Oul.style.left = 0; // 调回 从头播放
+            key = 1; // 从第二张开始播放
+        }
+        // 动画部分
+        animate(Oul,-key * liWidth);
+        // 对小圆点进行判断
+        circle ++;
+        if(circle > olLi.length - 1){
+            circle = 0;
+        }
+        // 小圆点颜色变化
+        for(var i = 0; i < olLi.length;i++){
+            // 清除所用的小圆点类名
+            olLi[i].className = "";
+        }
+        // 给当前小圆点，添加类名
+        olLi[circle].className = "current";
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+ul,ol{
+    list-style: none;
+}
+.scroll{
+    width: 500px;
+    height: 200px;
+    margin: 100px auto;
+    position: relative;
+    overflow: hidden;
+}
+.box{
+    width: 500px;
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+}
+.box ul{
+    width: 3000px;
+    height: 200px;
+    position: absolute;
+}
+.box ul li{
+    float: left;
+}
+.box ul li img{
+    width: 500px;
+    height: 200px;
+}
+.box ol{
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+}
+.box ol li{
+    float: left;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    border-radius: 50%; /* 向 div 元素添加圆角边框 */
+    background-color: gray;
+    opacity: 0.5; /* 透明度 */
+    margin-left: 10px;
+    cursor: pointer; /* 鼠标移动时，鼠标指针的变化（形状）*/
+}
+.box ol .current{
+    background-color: #38729c;
+}

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body, div, p,
+        h1, h2, h3, h4, h5, h6,
+        dl, dt, dd, ul, ol, li,
+        table, caption, th, td,
+        form, fieldset, input, textarea, select,
+        pre, address, blockquote,
+        embed, object {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        ul, ol {
+            list-style:none;
+        }
+
+        img {
+            vertical-align: top;
+        }
+
+        .scroll {
+            width: 950px;
+            height: 438px;
+            margin: auto;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .box {
+            width: 950px;
+            height: 438px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .box ul{
+            width: 700%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            padding:0px;
+            margin:0px;
+        }
+
+        .box ul li{
+            float: left;
+        }
+
+        .scroll ol {
+            position: absolute;
+            right: 365px;
+            bottom: 5px;
+        }
+
+        .scroll ol li {
+            float: left;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #000;
+            margin-left: 10px;
+            cursor: pointer;
+            opacity: 0.5;
+        }
+
+        .scroll ol li.current {
+            background-color: #000099;
+            opacity: 0.8;
+        }
+
+        #last {
+            position: absolute;
+            bottom: 179px;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+        }
+
+        #next {
+            position: absolute;
+            bottom: 179px;
+            right: 0px;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div id="scroll" class="scroll">
+    <div id="box" class="box">
+        <ul id="ul" style="left:-950px;">
+            <li><img src="img/1.jpg" width="950" height="438"></li>
+            <li><img src="img/2.jpg" width="950" height="438"></li>
+            <li><img src="img/3.jpg" width="950" height="438"></li>
+            <li><img src="img/4.jpg" width="950" height="438"></li>
+            <li><img src="img/5.jpg" width="950" height="438"></li>
+        </ul>
+        <ol id="olnavi"></ol>
+    </div>
+    <div id="last"></div>
+    <div id="next"></div>
+</div>
+<script>
+    //1.先获取html中的元素
+    var scroll = document.getElementById("scroll");
+    var ul = document.getElementById("ul");
+    var ulLis = ul.children;
+    var liWidth = ul.children[0].offsetWidth;
+    //2.再此之前，我们要明白，小圆点并不是写死的，它是根据ul li中的图片张数来决定的 。
+    var ol = document.getElementById("olnavi");
+    for (var i = 0; i < ulLis.length - 2; i++) {
+        var li = document.createElement("li");
+        li.id = (i + 1);  //id用于后面为li添加事件
+        ol.appendChild(li);
+
+    }
+    ol.children[0].className = "current" ;//将第一个小圆点设置为触发状态
+    //3.要实现无缝滚动 就需要多两张图片才行 ，即克隆第一张图片，放到最后一张的后面，克隆最后一张，放到第一张的前面。
+    var num = ulLis.length - 1;
+    ul.appendChild(ul.children[0].cloneNode(true));
+    ul.insertBefore(ul.children[num].cloneNode(true), ul.firstChild);
+
+    //4.接下来为左右箭头添加事件，鼠标放到箭头上会变色
+    var last = document.getElementById("last");
+    last.style.background = "url(./img/left.png)";
+    last.style.width = "64px";
+
+    last.addEventListener("mouseenter", function () {
+        last.style.background = "url(./img/newleft.png)";
+    }, false);
+
+    last.addEventListener("mouseleave", function () {
+        last.style.background = "url(./img/left.png)";
+    }, false);
+
+    var next = document.getElementById("next");
+    next.style.background = "url(./img/right.png)";
+    next.style.width = "64px";
+
+    next.addEventListener("mouseenter", function () {
+        next.style.background = "url(./img/newright.png)";
+    }, false);
+
+    next.addEventListener("mouseleave", function () {
+        next.style.background = "url(./img/right.png)";
+    }, false);
+    // 5.我们接着用js做动画 动画部分包括：
+    // ①.鼠标点击第几个小圆点，就要展示第几张图片，并且小圆点的颜色也发生变化.
+    // ②. 鼠标点击左右箭头，图片向左右移动一张
+    // ③图片自动轮播，（这需要一个定时器）
+    // ④.鼠标放在图片上，图片停止自动播放（这需要清除定时器）
+    // ⑤.鼠标离开图片，图片继续自动轮播 （重新开始定时器）
+    // 这里我们封装了一个animate()动画函数
+    function animate(obj, target) {  //obj为需要移动的元素，在本文中为ul，target为需要移动到的位置
+        var speed = obj.offsetLeft < target ? 10 : -10;  //判断速度向左还是向右
+        obj.timer = setInterval(function () {  //计时器每隔一定时间移动一次
+            var result = target - obj.offsetLeft;  //剩余需要移动的距离
+            obj.style.left = obj.offsetLeft + speed + "px";  //改变元素的left来实现移动
+            if (Math.abs(result) <= Math.abs(speed)) {  //当需要移动的距离小于速度时
+                clearInterval(obj.timer);   //清除计时器
+                obj.style.left = target + "px";  //直接移动到需要移动的位置
+                flag = true;  //将flag置为true，使点击事件能再次触发
+            }
+        }, 1);
+    }
+    //6.接下来把动画函数赋给左右箭头
+    var flag = true;  //用于判断上一个事件是否执行完毕，如果没有执行完毕禁止再次触发事件
+    var index = 1;  //是第几个小圆点
+    var lastclick = function () {
+        if (flag) {
+            flag = false;  //进入事件将flag置为false
+            console.log(flag);
+            if (index === 1) {  //判断是否为第一张
+                index = 6;
+                ul.style.left = "-5994px";  //当移动到第一张时，再向右移前会替换到最后一张后面的第一张，然后再向右移动。
+                animate(ul, ul.offsetLeft + liWidth); //动画函数一次向有移动一个图片长度的距离
+            }
+            else {
+                animate(ul, ul.offsetLeft + liWidth);
+            }
+            index -= 1; //移动小圆点计数器
+            btnShow(index);  //给新的小圆点高亮，取消上一个小圆点的高亮
+        }
+    };
+    last.addEventListener("click", lastclick, false);  //将函数赋给点击事件
+
+    var nextclick = function () {  //向左移与向右移类似
+        if (flag) {
+            flag = false;
+            if (index === 5) {
+                index = 0;
+                ul.style.left = "0px";
+                animate(ul, ul.offsetLeft - liWidth);
+            }
+            else {
+                animate(ul, ul.offsetLeft - liWidth);
+            }
+            index += 1;
+            btnShow(index);
+        }
+    };
+    next.addEventListener("click",nextclick, false);
+
+    function btnShow(cur_index) {
+        for (var i = 0; i < ol.children.length; i++) {
+            ol.children[i].className = ' '; //取消全部li的类
+        }
+        ol.children[cur_index - 1].className = "current";  //给新的小圆点加上类
+    }
+    //7.再加上一个计时器，每隔一段时间就会触发一次下一张的效果，来实现轮播
+    var timer;
+    function play() {
+        timer = setInterval(nextclick, 3000)
+    }
+
+    scroll.addEventListener("load", play(), false);  //整个div全部加载完毕后开始
+
+    scroll.addEventListener("mouseenter", function () { //鼠标移入图片是清除计时器
+        clearInterval(timer);
+
+    }, false);
+
+    scroll.addEventListener("mouseleave", function () {  //鼠标移出图片时再次启动计时器
+        play();
+    }, false);
+
+    //8.最后给小圆点加上事件，点第几个轮播到第几张
+    //小圆点的点击事件
+    var olliclick = function () {
+        if (flag) {
+            flag = false;
+            var cur_li = document.getElementsByClassName("current");
+            var lastid = cur_li[0].id;  //当前的小圆点是第几个
+            var distance = this.id - lastid;  //计算当前小圆点与点击的小圆点的距离（分正负）
+            if (distance == 0) {
+                flag = true;
+            }
+            else {
+                animate_ol(ul, distance);
+            }
+        }
+    };
+
+    //给所有的小圆点添加上点击事件
+    var ollitimer = 1;
+    var lis = ol.getElementsByTagName('li');
+    for (ollitimer; ollitimer < lis.length+1; ollitimer++) {
+        var olli = document.getElementById(ollitimer);
+        olli.addEventListener("click", olliclick, false);
+    }
+
+    function animate_ol(obj, value) {  //小圆点动画函数
+        if (value > 0) {  //判断移动方向
+            var speed = -20*value; //使动画时间一致
+        }
+        if (value < 0) {
+            var speed = -20*value;
+        }
+        var lastleft = obj.offsetLeft;
+        obj.timer = setInterval(function () {
+            var distance = Math.abs(value * liWidth) - Math.abs(obj.offsetLeft - lastleft);
+            //剩余需要移动的距离
+            if (distance < Math.abs(speed)) {
+                clearInterval(obj.timer);
+                if (value > 0) {
+                    obj.style.left = obj.offsetLeft - distance + "px";
+                    flag = true;
+                }
+                if (value < 0) {
+                    obj.style.left = obj.offsetLeft + distance + "px";
+                    flag = true;
+                }
+            }
+            else {
+                obj.style.left = obj.offsetLeft + speed + "px";
+            }
+        }, 1);
+        index = index + value;
+        btnShow(index);
+    }
+</script>
+</body>
+</html>
